@@ -78,48 +78,34 @@ const getDoctorBySpecialty = async(req, res)=>{
 
 
 
-// Controller for finding nearby doctors using KNN
 
-// Fonction pour obtenir les médecins par les paramètres géographiques
 
 async function getDoctorsByGeoParams(req, res) {
   try {
-    // Les coordonnées du patient (exemple : [longitude, latitude])
     const patientCoordinates = req.body.coordinates;
 
-    // Vérifier si les coordonnées du patient sont valides
     if (!patientCoordinates || patientCoordinates.length !== 2) {
       return res.status(400).json({
         success: false,
         message: "Invalid patient coordinates. Please provide valid longitude and latitude."
       });
     }
-
-    // Récupérer tous les médecins depuis la base de données
     const doctors = await userModel.find({});
-    console.log("Doctors:", doctors);  // Check what is being passed to the KNN model
+    console.log("Doctors:", doctors);  
 
-    // Tableau pour stocker les données valides des médecins
     const doctorData = [];
 
-    // Parcourir les médecins et extraire leurs coordonnées
     doctors.forEach(doc => {
       if (doc && doc.address && doc.address.coordinates && Array.isArray(doc.address.coordinates) && doc.address.coordinates.length === 2) {
         const doctorCoordinates = doc.address.coordinates;
         console.log("Doctor Coordinates:", doctorCoordinates);
 
-        // Vérification stricte pour éviter des coordonnées invalides (undefined)
+        //  pour éviter des coordonnées invalides (undefined)
         if (!doctorCoordinates.includes(undefined)) {
           doctorData.push({ coordinates: doctorCoordinates, doctor: doc });
-        } else {
-          console.warn("Skipping doctor with invalid coordinates:", doctorCoordinates);
-        }
-      } else {
-        console.warn("Skipping doctor with invalid address or coordinates:", doc);
-      }
+        } }
     });
 
-    // Vérification si nous avons des données valides de médecins
     if (doctorData.length === 0) {
       return res.status(400).json({
         success: false,
@@ -127,7 +113,7 @@ async function getDoctorsByGeoParams(req, res) {
       });
     }
 
-    // Création du modèle KNN avec les coordonnées des médecins
+    // Création du modèle KNN 
     const knn = new KNN();
 
     // Ajout des données des médecins au modèle KNN
@@ -135,11 +121,9 @@ async function getDoctorsByGeoParams(req, res) {
       knn.addData(doc.coordinates, doc.doctor);  // X: coordonnées, Y: données du médecin
     });
 
-    // Prédiction avec les coordonnées du patient
-    const predictions = knn.predict(patientCoordinates, doctorData.length);
+    // Prédiction 
+    const predictions = knn.predict(patientCoordinates, 5);
     console.log("Predictions:", predictions);
-
-    // Retourner les résultats au client
     res.json({
       success: true,
       message: "Nearby doctors found successfully.",
@@ -147,8 +131,6 @@ async function getDoctorsByGeoParams(req, res) {
     });
   } catch (error) {
     console.error("Error while finding nearby doctors using KNN:", error);
-
-    // Gestion des erreurs
     res.status(500).json({
       success: false,
       message: "Error while finding nearby doctors using KNN",
@@ -158,13 +140,37 @@ async function getDoctorsByGeoParams(req, res) {
 }
 
 
+const deleteDoctorControllerById = async(req, res)=>{
   
-  
-  
-  
+    try{
+        const {docId} = req.params;
+        const doctor = await userModel.findByIdAndDelete(docId);
+        if(!doctor){
+          return res.status(404).json({
+            success: false,
+            message: "doctor not found ",
+            error: err.message,
+          });
+        }
+        const docMail = doctor.email;
+        return res.status(200).json({
+            success: true,
+            message: " Doctor deleted Successfully ",
+            docMail
+          });
+    }catch(err){
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteDoctorControllerById  Api",
+            error: err.message,
+          });
+    }
+
+}
 
   
 
-  
-
-module.exports = {getAccepteddoctorsAcc, getUnAccepteddoctorsAcc, getDoctorById, getDoctorBySpecialty, getDoctorsByGeoParams}
+module.exports = {getAccepteddoctorsAcc, getUnAccepteddoctorsAcc, 
+  getDoctorById, getDoctorBySpecialty, getDoctorsByGeoParams
+, deleteDoctorControllerById
+}

@@ -25,3 +25,5 @@ app.use('/Dawini/auth', require('./Routes/authRoutes'));
 app.use('/Dawini/adm', require('./Routes/adminRoutes'));
 
 app.use('/Dawini/doc', require('./Routes/doctorsRoutes'));
+
+app.use('/Dawini/pat', require('./Routes/patientRoutes'));
